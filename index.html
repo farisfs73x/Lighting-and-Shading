@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPC 354 Assigment 2</title>
+
+
+
+  <script id="vertex-shader" type="x-shader/x-vertex">
+
+    attribute vec4 vPosition;
+      attribute vec4 vColor;
+      attribute vec2 vTexCoord;
+      attribute vec4 vNormal;
+
+      // Passed to fragment shader
+      varying vec4 fColor;
+      varying vec2 fTexCoord;
+      uniform mat4 modelViewMatrix;
+      uniform mat4 projectionMatrix;
+      uniform vec4 lightPosition;
+
+      // Lighting
+      uniform vec4 ambientProduct;
+      uniform vec4 diffuseProduct;
+      uniform vec4 specularProduct;
+      uniform float shininess;
+
+      void main() {
+      fColor = vColor;
+      fTexCoord = vTexCoord;
+
+      //Lighting
+      vec3 pos = -(modelViewMatrix * vPosition).xyz;
+      vec3 light = lightPosition.xyz;
+      vec3 L = normalize(light - pos);
+      vec3 E = -pos;
+      vec3 N = normalize((modelViewMatrix * vNormal).xyz);
+
+      // Diffrent diffuseProduct, specularProduct, shininess, etc;
+      vec3 H = normalize(L + E);
+      vec4 ambient = ambientProduct;
+
+      float Kd = max(dot(L, N), 0.0);
+      vec4 diffuse = Kd * diffuseProduct;
+
+      float Ks = pow(max(dot(N, H), 0.0), shininess);
+      vec4 specular = Ks * specularProduct;
+
+      if (dot(L, N) < 0.0) specular = vec4(0.0, 0.0, 0.0, 1.0);
+      fColor = ambient + diffuse + specular;
+      fColor.a = 1.0;
+      gl_Position = projectionMatrix * modelViewMatrix * vPosition;
+      }
+    </script>
+
+  <script id="fragment-shader" type="x-shader/x-fragment">
+    precision mediump float;
+      varying vec4 fColor;
+      varying vec2 fTexCoord;
+      uniform sampler2D theTexture;
+      void main() {
+      gl_FragColor = fColor * texture2D(theTexture, fTexCoord);
+      }
+  </script>
+  <!--Ensure everything is loaded properly before any function call-->
+  <script type="text/javascript" src="Common/webgl-utils.js"></script>
+  <script type="text/javascript" src="Common/initShaders.js"></script>
+  <script type="text/javascript" src="Common/MV.js"></script>
+  <script type="text/javascript" src="script.js"></script>
+  <script type="text/javascript" src="Common/geometry.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+
+<body>
+  <button onclick="myFunction()" class="info-cust">
+    Info
+  </button>
+  <div class="header" style="text-align: center; font-family: Arial">
+    <h1 style="color: #000000 ;background-color: #4FBDBA; padding: 5px 7px; margin: 10px 470px; border-radius: 15px;">
+      CPC 354 : Assigment 2 Group 12</h1>
+  </div>
+  <div class="displayShape">
+
+    <!-- Canvas Display -->
+    <table border="0" style="width:100%; height:100%;">
+      <tr>
+        <div style="text-align:center">
+          <canvas id="gl-canvas" width="720" height="600" style="background-color: transparent;  ">
+            Oops ... your browser doesn't support the HTML5 canvas element
+          </canvas>
+        </div>
+
+      </tr>
+      <!-- Shapes Texture of three object -->
+      <th style="background-color:#2C3333;">
+        <p class="text-bold" style="padding-bottom: 10px;  font-family: Arial">Shape Textures</p>
+        <div style="text-align: center;">
+          <!-- Sphere Textures -->
+          <div class="dropdown">
+            <button class="dropbtn btnclass">Sphere Textures</button>
+            <div class="dropdown-content">
+              <button id="BtnA1" class="design" style="margin-right: 10px; margin-top: 15px;">Sun</button>
+              <button id="BtnA2" class="design" style="margin-right: 10px; margin-top: 15px;">Saturn</button>
+              <button id="BtnA3" class="design" style="margin-right: 10px; margin-top: 15px;">Moon</button>
+            </div>
+          </div>
+          <!-- Cylinder Textures -->
+          <div class="dropdown">
+            <button class="dropbtn btnclass">Cylinder Textures</button>
+            <div class="dropdown-content">
+              <button id="BtnB1" class="design" style="margin-right: 10px; margin-top: 15px;">Battery</button>
+              <button id="BtnB2" class="design" style="margin-right: 10px; margin-top: 15px;">Wood</button>
+              <button id="BtnB3" class="design" style="margin-right: 10px; margin-top: 15px;">Tissue</button>
+            </div>
+          </div>
+          <!-- Cube Textures -->
+          <div class="dropdown">
+            <button class="dropbtn btnclass">Cube Textures</button>
+            <div class="dropdown-content ">
+              <button id="BtnC1" class="design" style="margin-right: 10px; margin-top: 15px;">Dice</button>
+              <button id="BtnC2" class="design" style="margin-right: 10px; margin-top: 15px;">Smoke</button>
+              <button id="BtnC3" class="design" style="margin-right: 10px; margin-top: 15px;">Rubic</button>
+            </div>
+          </div>
+        </div>
+      </th>
+      <!-- Range slider  -->
+      <th style="background-color:#395B64; ">
+        <div style="text-align:center; padding-top:50px;">
+          <p style="font-family:Arial;">Material Shininess</p>
+
+          <input id="materialshininess" type="range" min="1" max="100" value="10" step="1"
+            oninput="MShininess.innerText=materialshininess.value" />
+          <span id="MShininess">10</span>
+
+          <p style="font-family:Arial;">X-Axis Light Position</p>
+          <input id="xlightpositions" type="range" min="-10" max="10" value="0.0" step="0.1"
+            oninput="xLPosition.innerText=xlightpositions.value" />
+          <span id="xLPosition">0.0</span>
+
+          <p style="font-family:Arial;">Y-Axis Light Position</p>
+          <input id="ylightpositions" type="range" min="-10" max="10" value="0.0" step="0.1"
+            oninput="yLPosition.innerText=ylightpositions.value" />
+          <span id="yLPosition">0.0</span>
+
+
+        </div>
+        <br>
+      </th>
+      <!-- Range slider  -->
+      <th style="background-color:#636366; ">
+        <p style="font-family:Arial;">Ambient Light</p>
+        <input id="ambientLight" type="range" min="0.1" max="1" value="0.1" step="0.1"
+          oninput="LAmbient.innerText=ambientLight.value" />
+        <span id="LAmbient">0.1</span>
+        <p style="font-family:Arial;">Diffuse Light</p>
+        <input id="diffuseLight" type="range" min="0.1" max="10" value="1.0" step="0.1"
+          oninput="LDiffuse.innerText=diffuseLight.value" />
+        <span id="LDiffuse">1.0</span>
+
+        <p style="font-family:Arial;">Specular Light</p>
+        <input id="specularLight" type="range" min="0.1" max="10" value="1.0" step="0.1"
+          oninput="LSpecular.innerText=specularLight.value" />
+        <span id="LSpecular">1.0</span>
+      </th>
+
+      <th style="background-color:#2666CF; ">
+        <div id="StopStart" style="text-align:center">
+          <button class="button-cust">
+            <svg height="24" width="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M0 0h24v24H0z" fill="none"></path>
+              <path
+                d="M5 13c0-5.088 2.903-9.436 7-11.182C16.097 3.564 19 7.912 19 13c0 .823-.076 1.626-.22 2.403l1.94 1.832a.5.5 0 0 1 .095.603l-2.495 4.575a.5.5 0 0 1-.793.114l-2.234-2.234a1 1 0 0 0-.707-.293H9.414a1 1 0 0 0-.707.293l-2.234 2.234a.5.5 0 0 1-.793-.114l-2.495-4.575a.5.5 0 0 1 .095-.603l1.94-1.832C5.077 14.626 5 13.823 5 13zm1.476 6.696l.817-.817A3 3 0 0 1 9.414 18h5.172a3 3 0 0 1 2.121.879l.817.817.982-1.8-1.1-1.04a2 2 0 0 1-.593-1.82c.124-.664.187-1.345.187-2.036 0-3.87-1.995-7.3-5-8.96C8.995 5.7 7 9.13 7 13c0 .691.063 1.372.187 2.037a2 2 0 0 1-.593 1.82l-1.1 1.039.982 1.8zM12 13a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"
+                fill="currentColor"></path>
+            </svg>
+            <span>Start <strong>/</strong> Pause</span>
+          </button>
+
+          <!-- rotation on x , y z axis button -->
+          <p class="strtButton" style="font-family:Arial;">(Or press <kbd>S</kbd> or <kbd>P</kbd> key on keyboard)</p>
+        </div>
+        <br>
+        <div style="text-align: center; font-family: Arial;">
+          <p style="font-family:Arial; font-weight: bold;">Rotation</p>
+          <button id="buttonX" class="strtButton strtbtn-cus">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span> X-Axis
+          </button>
+          <button id="buttonY" class="strtButton strtbtn-cus">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span> Y-Axis
+          </button>
+          <button id="buttonZ" class="strtButton strtbtn-cus">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span> Z-Axis
+          </button>
+          <p class="strtButton" style="font-family:Arial;">(Or press <kbd>X</kbd><kbd>Y</kbd><kbd>Z</kbd> key on
+            keyboard)</p>
+        </div>
+      </th>
+
+    </table>
+  </div>
+
+  <script>
+    // When the user clicks on div, open the popup
+    function myFunction() {
+      var newLine = "\r\n"
+      var msg = "Group 12 members:"
+      msg += newLine;
+      msg += "Mohamad Zakir Zikri Bin Ibrahim (149129)";
+      msg += newLine;
+      msg += "Mohamad Nur Baihaqi Bin Ab Aziz (146193)";
+      msg += newLine;
+      msg += "Wan Mohammad Faris Bin Sammio (146418)";
+      alert(msg);
+    }
+  </script>
+
+</body>
+
+<img id="PictureA1" src="imagesFile/sun.png" hidden>
+<img id="PictureA2" src="imagesFile/Saturn.jpg" hidden>
+<img id="PictureA3" src="imagesFile/MoonTexture.jpg" hidden>
+<img id="PictureB1" src="imagesFile/battery.png" hidden>
+<img id="PictureB2" src="imagesFile/kayu.jpg" hidden>
+<img id="PictureB3" src="imagesFile/tissue.jpg" hidden>
+<img id="PictureC1" src="imagesFile/dice.png" hidden>
+<img id="PictureC2" src="imagesFile/smoke.jpg" hidden>
+<img id="PictureC3" src="imagesFile/rubic.png" hidden>
+
+</html>
